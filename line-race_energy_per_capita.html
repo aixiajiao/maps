@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+
+<head>
+  <meta charset="utf-8">
+</head>
+
+<body style="height: 100%; margin: 0">
+  <div id="container" style="height: 100%"></div>
+
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/echarts@5.3.1/dist/echarts.min.js"></script>
+  <script type="text/javascript">
+    var dom = document.getElementById("container");
+    var myChart = echarts.init(dom);
+    var app = {};
+
+    var option;
+    $.get(
+      'energy_per_capita.json',
+      function (_rawData) {
+        run(_rawData);
+      }
+    );
+    function run(_rawData) {
+      const countries = [
+      'United States', 'China', 'India', 'United Kingdom','Japan','Germany'
+      ];
+      const datasetWithFilters = [];
+      const seriesList = [];
+      echarts.util.each(countries, function (country) {
+        var datasetId = 'dataset_' + country;
+        datasetWithFilters.push({
+          id: datasetId,
+          fromDatasetId: 'dataset_raw',
+          transform: {
+            type: 'filter',
+            config: {
+              and: [
+                { dimension: 'Year', gte: 1960 },
+                { dimension: 'Country', '=': country }
+              ]
+            }
+          }
+        });
+        seriesList.push({
+          type: 'line',
+          datasetId: datasetId,
+          showSymbol: false,
+          name: country,
+          endLabel: {
+            show: true,
+            formatter: function (params) {
+              return params.value[0] + ': ' + params.value[2];
+            }
+          },
+          labelLayout: {
+            moveOverlap: 'shiftY'
+          },
+          emphasis: {
+            focus: 'series'
+          },
+          encode: {
+            x: 'Year',
+            y: 'Energy_use',
+            label: ['Country', 'Energy_use'],
+            itemName: 'Year',
+            tooltip: ['Energy_use']
+          }
+        });
+      });
+      option = {
+        animationDuration: 8000,
+        backgroundColor: "#ffff",
+        color:["#4992ff",
+        "#fddd60",
+        "#ff6e76",
+        "#58d9f9",
+        "#05c091",
+        "#ff8a45",
+        "#8d48e3",
+        "#dd79ff"],
+        textStyle: {
+          color: "#4B484B",
+          fontFamily: "sans-serif",
+          fontSize: 13,
+          fontStyle: "normal",
+          fontWeight: "normal"
+        },
+        dataset: [
+          {
+            id: 'dataset_raw',
+            source: _rawData
+          },
+          ...datasetWithFilters
+        ],
+        title: {
+          text: 'Energy Use per Capita (1960-2015)',
+        textStyle:{
+          
+          fontSize:'20',
+    
+        },
+        subtext:'Five Largest Economies (GDP) + United Kingdom',
+        subtextStyle: {
+          fontSize:17,
+          color:"#4B484B"
+        }
+        
+        },
+        tooltip: {
+          order: 'valueDesc',
+          trigger: 'axis'
+        },
+        xAxis: {
+          type: 'category',
+          nameLocation: 'middle'
+        },
+        yAxis: {
+          name: '                 kg of oil equivalent per capita',
+          nameTextStyle: {
+            color:"#464346"
+          }
+        },
+        grid: {
+          top:100,
+          right: 150
+        },
+        series: seriesList
+      };
+      myChart.setOption(option);
+    }
+
+    if (option && typeof option === 'object') {
+      myChart.setOption(option);
+    }
+
+  </script>
+</body>
+
+</html>
